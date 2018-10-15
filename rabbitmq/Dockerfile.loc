@@ -1,0 +1,28 @@
+FROM ubuntu:16.04
+  
+MAINTAINER Vinayak Singh <vinayak315singh@gmail.com>
+
+ENV RMQ_USER=rabbitmq \
+    RMQ_DATA_DIR=/var/lib/rabbitmq \
+    RMQ_LOG_DIR=/var/log/rabbitmq
+
+
+RUN apt-get update && apt-get install wget -y \
+ && echo "deb http://www.rabbitmq.com/debian/ testing main" > /etc/apt/sources.list.d/rabbitmq.list \
+ && wget -O- https://www.rabbitmq.com/rabbitmq-release-signing-key.asc | apt-key add - \
+ && apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y rabbitmq-server \
+ && rm -rf /var/lib/apt/lists/* \
+ && rabbitmq-plugins enable rabbitmq_management \
+ && echo "[{rabbit, [{loopback_users, []}]}]." > /etc/rabbitmq/rabbitmq.config
+
+
+COPY entrypoint.sh /sbin/entrypoint.sh
+RUN chmod 755 /sbin/entrypoint.sh
+
+EXPOSE 5672
+EXPOSE 15672
+
+VOLUME ["${RMQ_DATA_DIR}"]
+
+ENTRYPOINT ["/sbin/entrypoint.sh"]
